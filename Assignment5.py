@@ -17,9 +17,8 @@ def load_students(filename):
 	for line in file: 
 		
 		# going through each line in the file (representing the name and id of a student), instantiate a new student object by removing the new line character and splitting the data by ",". 
-		
-		student = Student(line.strip().split(",")[0], int(line.strip().split(",")[1]))
-		
+		line = line.strip() # strip new line characters and whitespace from the ends of the line
+		student = Student(line.split(",")[0], int(line.split(",")[1]))
 		students.append(student) # append each student to the list of students
 
 	file.close()
@@ -40,7 +39,7 @@ def write_students_to_file(student_list, filename):
 
 def find_min_id(students): 
 	
-	# this function finds and returns the student object with the smallest id number
+	# this function finds and returns the student object with the smallest id number in a non-empty student list
 	# it is used in the implementation of the selection sort
 	
 	min_student = students[0]
@@ -65,7 +64,7 @@ def sort_students_by_id(student_list):
 		
 		student_list.remove(min_student) # remove the smallest id student from the list
 		
-		student_list.insert(i, min_student) # append the smallest id student to the end of the growing sorted list 
+		student_list.insert(i, min_student) # insert the smallest id student to the end of the growing sorted list 
 		
 	return student_list
 
@@ -77,7 +76,6 @@ def search_students_by_id(student_list, target_id):
 	
 	# below setting the bounds of the search space
 	lower_bound_index = 0
-	middle_index = 0
 	upper_bound_index = len(student_list) - 1
 	
 	while upper_bound_index >= lower_bound_index: 
@@ -86,11 +84,11 @@ def search_students_by_id(student_list, target_id):
 		
 		middle_index = (upper_bound_index + lower_bound_index)//2 # define the middle index as the average of the upper and lower bound indices
 		
-		if student_list[middle_index].id < target_id: 
+		if student_list[middle_index].id == target_id:
 			
-			# if the target is bigger than the middle id, discard the lower half of the list from the search space
+			# if the target hits the middle id, it has been found.
 			
-			lower_bound_index = middle_index + 1
+			return middle_index
 			
 		elif student_list[middle_index].id > target_id: 
 			
@@ -98,11 +96,11 @@ def search_students_by_id(student_list, target_id):
 			
 			upper_bound_index = middle_index - 1
 			
-		elif student_list[middle_index].id == target_id: 
+		elif student_list[middle_index].id < target_id: 
 			
-			# if the target hits the middle id, it has been found.
+			# if the target is bigger than the middle id, discard the lower half of the list from the search space
 			
-			return middle_index
+			lower_bound_index = middle_index + 1
 	
 	return -1 # target not found after search space reduced to null
 
@@ -110,8 +108,9 @@ def get_range_of_students(student_list, start_id, end_id):
 
 	# this function will find the students with IDs start_id
 	# and end_id and return a list of all student objects with
-	# student numbers between these two points.
+	# student numbers between start_id and end_id.
 
+	# initialize the start and end indices. These are what will be the bounds of the range of the student ids if the specified start and end ids are not valid
 	start_index = 0
 	end_index = len(student_list) - 1
 	
@@ -121,20 +120,25 @@ def get_range_of_students(student_list, start_id, end_id):
 	
 	if search_students_by_id(student_list, start_id) != -1: 
 		
+		# if the start_id is a valid id, find the index of the student in the sorted list with that id
+		
 		start_index = search_students_by_id(student_list, start_id)
 		
 		
 	if search_students_by_id(student_list, end_id) != -1: 
 		
+		# similar to above, if the end_id is a valid id, find the index of the student in the sorted list with that id
+		
 		end_index = search_students_by_id(student_list, end_id)
 		
-	student_list = sort_students_by_id(student_list)[start_index: end_index + 1]	
+	student_list = sort_students_by_id(student_list)[start_index: end_index + 1] 
+	# return the slice of the list of students sorted by id according to the start and end index. If the indices of the start and end ids were not found, by default the entire list will be returned (as the default start_index and end_index initialized at the top of the function will remain unchanged)
 	
 	return student_list
 
 def sort_students_by_name(student_list):
 	
-	# this function sorts the students according to name in descending order by using insertion sort.
+	# this function sorts the students according to name in descending order by using insertion sort. This follows the regular insertion sort algorithm but instead sorts from the end of the list to the beginnning of the list rather than from the beginning to the end as in regular insertion sort
 
 	for i in range(1, len(student_list)): 
 		
@@ -155,36 +159,47 @@ def search_students_by_name(student_list, target_name):
 	
 	# this binary search follows the same logic as the previous binary search above, but eliminates the upper half of the search space when the target is smaller than the middle value and vice versa for the lower half because the list is in descending order
 	
-	student_list = sort_students_by_name(student_list)
+	student_list = sort_students_by_name(student_list) # sort the list first (by name, in descending order)
 	
 	lower_bound_index = 0
-	middle_index = 0
 	upper_bound_index = len(student_list) - 1
 	
 	while upper_bound_index >= lower_bound_index: 
 		
-		middle_index = (lower_bound_index + upper_bound_index)//2
+		middle_index = (lower_bound_index + upper_bound_index)//2 # at each step, find the middle index of the current upper and lower bounds of the search space 
 		
-		if student_list[middle_index].name < target_name: 
+		if student_list[middle_index].name == target_name: 
 			
-			upper_bound_index = middle_index - 1
+			# if the target is found at the middle index, return the middle index
+			
+			return middle_index
 			
 		elif student_list[middle_index].name > target_name: 
 			
+			# if the target is smaller than the middle value, discard the bottom half of the list from the search space (as lower values will be found at higher indices since the list is ordered in descending order)
+			
 			lower_bound_index = middle_index + 1
 			
-		elif student_list[middle_index].name == target_name: 
+		elif student_list[middle_index].name < target_name: 
 			
-			return middle_index
-	return -1
+			# if the target is larger than the middle value, discard the top half of the list from the search space (as larger values will be found at lower indices since the list is ordered in descending order)
+			
+			upper_bound_index = middle_index - 1
+			
+	return -1 # Not found, return -1
 
 def main(): 
 
-	# main is used test sample inputs when the program is run from IDE and not imported as a library.
+	# main is used test sample inputs/outputs when the program is run from IDE and not imported as a library.
 	
 	students = load_students('student_data.csv')
 	
 	students = sort_students_by_id(students)
+	
+	for i in range(len(students)): 
+		
+		print(students[i].id, i)
+	
 	
 	print(search_students_by_id(students, 100573925))
 	print(search_students_by_id(students, 100335718))
@@ -205,6 +220,10 @@ def main():
 	
 	students = sort_students_by_name(students)
 	
+	for i in range(len(students)): 
+		
+		print(students[i].name, i)	
+	
 	print(search_students_by_name(students, 'JEFFEREY PALTANAVAGE'))
 	print(search_students_by_name(students, 'BILL MURRAY'))
 	print(search_students_by_name(students, 'YOUNG WHEATCROFT'))
@@ -213,4 +232,7 @@ def main():
 if __name__ == "__main__": 
 	
 	main()
+
+
+
 
